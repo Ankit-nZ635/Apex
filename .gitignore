@@ -40,3 +40,4 @@ Thumbs.db
 # Persistent Database Volumes (if mounted locally)
 postgres_data/
 redis_data/
+
