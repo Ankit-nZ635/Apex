@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ledger_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ledger_admin
+      POSTGRES_PASSWORD: ledger_secret_password
+      POSTGRES_DB: ledger_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledger_admin -d ledger_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ledger_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: ledger_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "redis_secret_password"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_secret_password", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ledger_net
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  ledger_net:
+    driver: bridge
+
